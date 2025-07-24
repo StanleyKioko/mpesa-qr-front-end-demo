@@ -1,19 +1,20 @@
-// filepath: c:\Users\HP\Desktop\Folders\IVY-Internship\mpesa-qr\src\components\Header.jsx
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
-const Header = ({ onLogout }) => {
-  const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
+const Header = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // The App.js auth listener will handle redirection
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
-    navigate('/login');
   };
 
   return (
-    <header className="bg-mpesa-green shadow">
+    <header className="bg-[#43b02a] shadow">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center">

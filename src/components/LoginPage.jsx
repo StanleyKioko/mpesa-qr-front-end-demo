@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
-const LoginPage = ({ onLogin }) => {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,40 +22,38 @@ const LoginPage = ({ onLogin }) => {
       setLoading(true);
       setError('');
       
-      // Demo login (no Firebase)
-      setTimeout(() => {
-        const success = onLogin ? onLogin(email, password) : true;
-        if (success) {
-          navigate('/dashboard');
-        } else {
-          setError('Invalid credentials');
-        }
-        setLoading(false);
-      }, 1000); // Simulate network delay
-      
+      // Sign in with Firebase Authentication
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      setError('Failed to login. Please check your credentials.');
+      
+      // Handle specific Firebase auth errors
+      if (error.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later.');
+      } else {
+        setError('Failed to login. Please check your credentials.');
+      }
+    } finally {
       setLoading(false);
     }
   };
 
+  // Rest of your component...
+  // (UI code remains mostly the same)
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-mpesa-green" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-              <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-            </svg>
-          </div>
+        <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-mpesa-green">M-PESA QR</h2>
-          <h3 className="mt-2 text-center text-xl text-mpesa-gray">Merchant Login</h3>
+          <h3 className="mt-2 text-center text-xl text-mpesa-gray-dark">Merchant Login</h3>
         </div>
         
         {error && (
-          <div className="bg-mpesa-red-light/20 border border-mpesa-red text-mpesa-red-dark px-4 py-3 rounded-md relative" role="alert">
+          <div className="bg-mpesa-red-light/20 border border-mpesa-red-light text-mpesa-red-dark px-4 py-3 rounded relative" role="alert">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
@@ -68,7 +68,7 @@ const LoginPage = ({ onLogin }) => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-mpesa-green focus:border-mpesa-green focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-mpesa-green focus:border-mpesa-green"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -82,7 +82,7 @@ const LoginPage = ({ onLogin }) => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-mpesa-green focus:border-mpesa-green focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-mpesa-green focus:border-mpesa-green"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -98,13 +98,13 @@ const LoginPage = ({ onLogin }) => {
                 type="checkbox"
                 className="h-4 w-4 text-mpesa-green focus:ring-mpesa-green border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-mpesa-gray">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-mpesa-red hover:text-mpesa-red-dark">
+              <a href="#" className="font-medium text-mpesa-green hover:text-mpesa-green-dark">
                 Forgot your password?
               </a>
             </div>
@@ -132,21 +132,10 @@ const LoginPage = ({ onLogin }) => {
                   </svg>
                 </span>
               )}
-              {loading ? 'Logging in...' : 'Sign in'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
-          
-          {/* Demo mode hint */}
-          <div className="text-center text-sm text-mpesa-gray">
-            <p>Demo mode: Enter any email and password to login</p>
-          </div>
         </form>
-
-        <div className="pt-6 text-center">
-          <div className="border-t border-gray-200 pt-6">
-            <p className="text-xs text-mpesa-gray">© 2025 Safaricom PLC. All rights reserved.</p>
-          </div>
-        </div>
       </div>
     </div>
   );
